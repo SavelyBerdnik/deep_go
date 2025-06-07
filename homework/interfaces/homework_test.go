@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,30 +10,41 @@ import (
 // go test -v homework_test.go
 
 type UserService struct {
-	// not need to implement
 	NotEmptyStruct bool
 }
 type MessageService struct {
-	// not need to implement
 	NotEmptyStruct bool
 }
 
 type Container struct {
-	// need to implement
+	constructors map[string]func() interface{}	
 }
 
 func NewContainer() *Container {
-	// need to implement
-	return &Container{}
+	return &Container{
+		constructors: make(map[string]func() interface{}),
+	}
 }
 
 func (c *Container) RegisterType(name string, constructor interface{}) {
-	// need to implement
+	constructorFunc, ok := constructor.(func() interface{})
+	if !ok {
+		return
+	}
+
+	if _, ok := c.constructors[name]; ok {
+		return
+	}
+	c.constructors[name] = constructorFunc
 }
 
 func (c *Container) Resolve(name string) (interface{}, error) {
-	// need to implement
-	return nil, nil
+	constructor, ok := c.constructors[name]
+	if !ok {
+		return nil, errors.New("unknown constructor")
+	}
+
+	return constructor(), nil
 }
 
 func TestDIContainer(t *testing.T) {
